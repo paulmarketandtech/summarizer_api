@@ -1,0 +1,29 @@
+<li class="video-card" data-id="{{ v.id }}">
+    <div class="video-header" onclick="toggleSummary('{{ v.id }}')">
+        <div class="video-info">
+            <h3 class="video-title">{{ v.title or 'Untitled' }}</h3>
+            <div class="video-meta">
+                <span class="creator">{{ v.yt_creator or 'Unknown' }}</span>
+                {% if v.content_type %}
+                    <span class="badge">{{ v.content_type }}</span>
+                {% endif %}
+                {% if v.published_date %}
+                    <span class="date">{{ v.published_date }}</span>
+                {% endif %}
+            </div>
+            {% if v.summary_preview %}
+                <p class="preview">{{ v.summary_preview }}</p>
+            {% endif %}
+        </div>
+        <div class="toggle-icon">▼</div>
+    </div>
+
+    <div class="video-summary" id="summary-{{ v.id }}">
+        <div class="summary-content">
+            <div class="loading">Loading summary...</div>
+        </div>
+        <div class="video-actions">
+            <a href="{{ v.url }}" target="_blank" rel="noopener" class="btn btn-ghost">Watch on YouTube ↗</a>
+        </div>
+    </div>
+</li>

@@ -1,0 +1,72 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.coverage
+htmlcov
+dist
+build
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.venv
+.env.*
+venv
+
+# Test data (but keep sample data if needed)
+tests/fixtures/large_files
+
+# Development
+notebooks
+*.ipynb
+.ipynb_checkpoints
+
+# Optional: Exclude old archives to save image size
+archive/transcripts/*
+archive/summaries/*
+archive/logs/*
+
+# But keep the directories
+!archive/
+!archive/transcripts/.gitkeep
+!archive/summaries/.gitkeep
+!archive/logs/.gitkeep
+
+README*
+LICENSE
+pgdata
+pgadmin
+postgres
+chroma_db/
+*.db
+*.sqlite
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.Python
+*.md
+tests/
+docs/
+.coverage
+htmlcov/
+archive/
+data/
+*.log
+Dockerfile*
+docker-compose*
+.vscode
+.idea

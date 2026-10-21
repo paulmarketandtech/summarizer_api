@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Filter bar -->
+<section class="filters">
+    <div class="filter-group">
+        <label for="creator">Creator</label>
+        <select id="creator" name="creator">
+            <option value="">All creators</option>
+            {% for c in creators %}
+                <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="content_type">Type</label>
+        <select id="content_type" name="content_type">
+            <option value="">All types</option>
+            {% for t in content_types %}
+                <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="date_from">From</label>
+        <input type="date" id="date_from" name="date_from">
+    </div>
+
+    <div class="filter-group">
+        <label for="date_to">To</label>
+        <input type="date" id="date_to" name="date_to">
+    </div>
+
+    <button id="apply-filters" class="btn btn-primary">Apply</button>
+    <button id="clear-filters" class="btn btn-ghost">Clear</button>
+</section>
+
+<!-- Video list -->
+<section id="results">
+    <div class="results-count">
+        Showing <span id="count">{{ videos|length }}</span> videos
+    </div>
+
+    <ul class="video-list" id="video-list">
+        {% for v in videos %}
+            {% include '_video_card.html' %}
+        {% else %}
+            <li class="empty">No videos found.</li>
+        {% endfor %}
+    </ul>
+</section>
+
+{% endblock %}

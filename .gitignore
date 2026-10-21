@@ -1,0 +1,61 @@
+# Virtual Environment
+venv/
+env/
+.venv
+
+# Data & Archives (can be huge)
+archive/
+data/
+*.db
+chroma_db/
+file_to_process/
+backup/
+backups/
+
+# LLM models (if local)
+models/
+.ollama/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+scratchpad/
+sandbox_data/
+marimo_files/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Extras
+*.txt
+*.json
+*.jsonl
+*.md

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Ask AI — YT Summarizer{% endblock %}
+
+
+{% block content %}
+
+<section class="rag-section">
+    <h2>Ask across all summaries</h2>
+    <p class="hint">
+        Search through video summaries, transcript chunks, and per-stock analysis.
+        Results are ranked by semantic similarity.
+    </p>
+
+    <form id="rag-form" class="rag-form">
+        <textarea
+            id="rag-query"
+            placeholder="e.g. What was being said about NVIDIA earnings in Q2 2024?"
+            rows="3"
+            required
+        ></textarea>
+        <div class="rag-controls">
+            <button type="submit" class="btn btn-primary" id="rag-submit">Search</button>
+            <span id="rag-status" class="rag-status"></span>
+        </div>
+    </form>
+
+    <div id="rag-results" class="rag-results"></div>
+</section>
+
+{% endblock %}
