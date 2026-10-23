@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import Annotated
 
 import fastapi_swagger_dark as fsd
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db_read
@@ -32,9 +34,9 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @app.get("/health")
-def health(db: Session = Depends(get_db_read)):
+def health_check(db: Annotated[Session, Depends(get_db_read)]):
     try:
         db.execute(text("SELECT 1"))
         return {"status": "ok", "db": "ok"}
-    except Exception as e:
+    except SQLAlchemyError as e:
         return {"status": "degraded", "db": str(e)}
