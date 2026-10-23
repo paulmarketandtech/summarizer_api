@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -7,7 +9,7 @@ router = APIRouter(prefix="/api/internal", tags=["internal"])
 
 
 @router.post("/process", dependencies=[Depends(require_localhost)])
-def process_transcript(db: Session = Depends(get_db_write)):
+def process_transcript(db: Annotated[Session, Depends(get_db_write)]):
     # Write access, but only from localhost
     # move to logic from app.py and src/app.py
     ...

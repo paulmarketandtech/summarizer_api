@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -43,7 +43,7 @@ class VideoPublicDetail(VideoPublicItem):
     summary: SummaryPublic | None = None
 
 
-class Page(BaseModel, Generic[T]):
+class Page[T](BaseModel ):
     """Generic pagination wrapper: Page[VideoPublicItem], Page[SomethingElse], etc."""
 
     items: list[T]

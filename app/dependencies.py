@@ -18,7 +18,7 @@ def get_transcript() -> TranscriptFetcher:
     return youtube_fetcher.download_yt_transcript()
 """
 
-from typing import Generator
+from collections.abc import Generator
 
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session

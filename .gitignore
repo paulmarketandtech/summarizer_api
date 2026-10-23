@@ -59,3 +59,7 @@ Thumbs.db
 *.json
 *.jsonl
 *.md
+
+
+old_ci.yml
+second_ci.yml

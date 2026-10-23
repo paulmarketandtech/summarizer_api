@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import and_, desc, select
 from sqlalchemy.orm import Session, selectinload
 
-from src.storage.models import Summary, Video
+from app.storage.models import Summary, Video
 
 
 @dataclass

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -22,7 +24,10 @@ def get_titles():
 
 
 @router.post("/feed", dependencies=[Depends(require_api_key)])
-def feed_video(url: str, db: Session = Depends(get_db_write)):
+def feed_video(
+    db: Annotated[Session, Depends(get_db_write)],
+    url: str,
+):
     # This session CAN write. Protected by API key.
     new_video = Video(url=url)
     db.add(new_video)

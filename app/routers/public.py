@@ -28,12 +28,12 @@ router = APIRouter(prefix="/public", tags=["public"])
 
 @router.get("/vid")
 def list_videos(
+    db: Annotated[Session, Depends(get_db_read)],
     yt_creator: str | None = None,
     content_type: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
     limit: int = 50,
-    db: Session = Depends(get_db_read),
 ):
     return VideoService(db).list_filtered(
         creator=yt_creator,
@@ -55,8 +55,8 @@ def get_vid(video_id: UUID):
 
 @router.post("/rag", response_model=list[RagResult])
 def rag_search(
+    db: Annotated[Session, Depends(get_db_read)],
     body: RagQuery,
-    db: Session = Depends(get_db_read),
 ):
     if len(body.query.strip()) < 3:
         raise HTTPException(400, "Query too short")
