@@ -42,6 +42,7 @@ class RagService:
             )
 
         # 3. Search full summaries
+        """
         summaries = (
             self.db.query(
                 Summary.video_id,
@@ -63,6 +64,7 @@ class RagService:
                 }
             )
 
+        """
         # 4. Search stock summaries
         stocks = (
             self.db.query(
