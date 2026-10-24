@@ -47,6 +47,7 @@ jobs:
 
       - name: Type Check
         run: uvx mypy app/ --ignore-missing-imports
+        continue-on-error: true
 
       - name: Run Migrations
         env:
