@@ -21,4 +21,4 @@ USER app
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["fastapi", "run", "main.py", "--host", "127.0.0.1", "--port", "8000"]

@@ -41,31 +41,7 @@ class RagService:
                 }
             )
 
-        # 3. Search full summaries
-        """
-        summaries = (
-            self.db.query(
-                Summary.video_id,
-                Summary.final_report.label("text"),
-                Summary.embedding.cosine_distance(query_vector).label("distance"),
-            )
-            .filter(Summary.embedding.isnot(None))
-            .order_by("distance")
-            .limit(top_k)
-            .all()
-        )
-        for row in summaries:
-            results.append(
-                {
-                    "video_id": str(row.video_id),
-                    "text": row.text,
-                    "source": "summary",
-                    "similarity": round(1 - row.distance, 4),
-                }
-            )
-
-        """
-        # 4. Search stock summaries
+        # 3. Search stock summaries
         stocks = (
             self.db.query(
                 SingleStockSummary.video_id,
@@ -90,6 +66,6 @@ class RagService:
                 }
             )
 
-        # 5. Combine all results, sort by similarity, take top_k
+        # 4. Combine all results, sort by similarity, take top_k
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
