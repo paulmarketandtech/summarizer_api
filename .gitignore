@@ -58,7 +58,6 @@ Thumbs.db
 *.txt
 *.json
 *.jsonl
-*.md
 
 
 old_ci.yml
