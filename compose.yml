@@ -14,7 +14,7 @@ services:
       ["fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]
 
   watchtower:
-    image: containrrr/watchtower
+    image: nickfedor/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
