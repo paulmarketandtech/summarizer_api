@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.services.embeddings import EmbeddingService
-from app.storage.models import SingleStockSummary, Summary, TranscriptChunk
+from app.storage.models import SingleStockSummary, TranscriptChunk
 
 
 class RagService:
