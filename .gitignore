@@ -58,9 +58,3 @@ Thumbs.db
 *.txt
 *.json
 *.jsonl
-
-
-old_ci.yml
-second_ci.yml
-before_grok_ci.yml
-deploy.yml
