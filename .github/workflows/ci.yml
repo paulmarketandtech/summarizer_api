@@ -52,6 +52,7 @@ jobs:
       - name: Run Migrations
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          MIGRATION_DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: uv run alembic upgrade head
 
       - name: Run Tests
