@@ -46,7 +46,7 @@ jobs:
         run: uv run ruff check app/
 
       - name: Type Check
-        run: uv run mypy app/ --ignore-missing-imports
+        run: uvx run mypy app/ --ignore-missing-imports
 
       - name: Run Migrations
         env:
