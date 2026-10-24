@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.services.embeddings import EmbeddingService
-from app.storage.models import SingleStockSummary, Summary, TranscriptChunk
+from app.storage.models import SingleStockSummary, TranscriptChunk
 
 
 class RagService:
@@ -42,6 +42,7 @@ class RagService:
             )
 
         # 3. Search full summaries
+        """
         summaries = (
             self.db.query(
                 Summary.video_id,
@@ -63,6 +64,7 @@ class RagService:
                 }
             )
 
+        """
         # 4. Search stock summaries
         stocks = (
             self.db.query(
