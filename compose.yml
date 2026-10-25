@@ -1,10 +1,11 @@
 services:
   api:
     build: .
-    image: ghcr.io/paulmarketandtech/summarizer_api:latest
     container_name: summarizer-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      - ENV=dev
     ports:
       - "8000:8000"
     volumes:
