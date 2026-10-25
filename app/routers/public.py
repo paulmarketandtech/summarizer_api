@@ -58,9 +58,6 @@ def rag_search(
     db: Annotated[Session, Depends(get_db_read)],
     body: RagQuery,
 ):
-    if len(body.query.strip()) < 3:
-        raise HTTPException(400, "Query too short")
-
     service = RagService(db)
     return service.search(body.query, top_k=5)
 
