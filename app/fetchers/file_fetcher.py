@@ -10,12 +10,12 @@ class FileTranscriptFetcher:
         self.base_dir = base_dir or config.TRANSCRIPTS_DIR
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
-    def fetch(self, identifier: str) -> dict:
+    def fetch(self, filename: str) -> dict:
         """
         Read transcript from local file.
 
         Args:
-            identifier: Filename without extension (e.g., 'sample_video')
+            filename: Full file name
 
         Returns:
             Raw transcript text
@@ -23,7 +23,7 @@ class FileTranscriptFetcher:
         Raises:
             FileNotFoundError: If file doesn't exist
         """
-        file_path = self.base_dir / f"{identifier}.txt"
+        file_path = self.base_dir / f"{filename}"
 
         if not file_path.exists():
             available_files = list(self.base_dir.glob("*.txt"))
@@ -35,7 +35,7 @@ class FileTranscriptFetcher:
         transcript_text = file_path.read_text(encoding="utf-8")
 
         yt_metadata = {}
-        yt_metadata["transcript_file_name"] = identifier
+        yt_metadata["transcript_file_name"] = filename
         yt_metadata["transcript_text"] = transcript_text
         yt_metadata["transcript_char_length"] = len(transcript_text)
         yt_metadata["transcript_word_count"] = len(transcript_text.split())
