@@ -13,6 +13,7 @@ from app.config import config
 from app.extraction.temp_extraction import (
     aggregate_extracted_data,
     extract_facts_from_chunk,
+    generate_stock_report,
 )
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.services.lang_chunker import text_chunker
@@ -59,9 +60,20 @@ class ProcessTranscriptLocal:
         grouped_stocks = aggregate_extracted_data(extracted_data)
         return grouped_stocks
 
-    def create_final_report(self):
-        # TODO: create a final report so it's easier to read the output
-        ...
+    def create_final_report(self, grouped_stocks):
+
+        detected_companies = list(grouped_stocks.keys())
+        print(f"Companies Detected: {detected_companies}")
+
+        print("\nGenerating final reports per company...\n")
+        final_output = f"# Stock Analysis Report\n**Companies Found:** {', '.join(detected_companies)}\n\n---\n"
+
+        for stock_name, stock_data in grouped_stocks.items():
+            print(f"Synthesizing summary for: {stock_name}...")
+            llm_stock_metadata = generate_stock_report(stock_name, stock_data)
+            final_output += llm_stock_metadata["stock_full_text"] + "\n\n---\n"
+
+        return final_output
 
 
 TRANSCRIPTS_DIR = config.TRANSCRIPTS_DIR
@@ -79,16 +91,8 @@ for chunk in chunks_metadata:
 
 print("pipeline")
 print("-" * 50)
-grouped_data = processor.extracted_agggregation(all_extractions)
-__import__("pprint").pprint(grouped_data)
-detected_companies = list(grouped_data.keys())
-print(f"Companies Detected: {detected_companies}")
+grouped_stocks = processor.extracted_agggregation(all_extractions)
+__import__("pprint").pprint(grouped_stocks)
 
-"""
-chunks_metadata = text_chunker(transcript_text, 4000, 600)
-
-transcript_char_length = file_metadata["transcript_char_length"]
-print(transcript_char_length)
-print(len(chunks_metadata))
-print(chunks_metadata[1]["text"])
-"""
+final_output = processor.create_final_report(grouped_stocks)
+__import__("pprint").pprint(final_output)

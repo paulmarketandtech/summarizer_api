@@ -7,7 +7,10 @@ import yaml
 from dotenv import load_dotenv
 
 from app.services import llm_client
-from app.utils.create_report_metadata import create_response_metadata
+from app.utils.create_report_metadata import (
+    create_response_metadata,
+    create_stock_metadata,
+)
 
 load_dotenv()
 
@@ -92,3 +95,29 @@ def aggregate_extracted_data(
                     grouped_stocks[name][key].extend(item[key])
 
     return grouped_stocks
+
+
+def generate_stock_report(stock_name: str, stock_data: dict) -> dict:
+    config = prompts["synthesis_json_data"]
+    synthesis_system_template = config["system"]
+    synthesis_user_template = config["user"]
+
+    prompt = synthesis_user_template.format(
+        stock_name=stock_name,
+        kpis_mentioned=json.dumps(stock_data["kpis_mentioned"]),
+        bull_thesis=json.dumps(stock_data["bull_thesis"]),
+        bear_thesis=json.dumps(stock_data["bear_thesis"]),
+        strengths=json.dumps(stock_data["strengths"]),
+        weaknesses=json.dumps(stock_data["weaknesses"]),
+        catalysts=json.dumps(stock_data["catalysts"]),
+    )
+
+    response = llm.generate(
+        user_prompt=prompt, system_prompt=synthesis_system_template, json_mode=False
+    )
+
+    llm_stock_metadata = create_stock_metadata(
+        response, stock_name, synthesis_user_template, synthesis_system_template
+    )
+
+    return llm_stock_metadata
