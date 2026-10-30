@@ -1,0 +1,69 @@
+extract_data_to_json:
+  model: "qwen2.5:7b"
+  system: |-
+    You are a precise financial data extraction bot.
+    You say only what you see, you don’t make up stuff.
+    Extract stock/company data from transcript text.
+    Return ONLY a valid JSON array of objects. Do not summarize general macro statements unless directly tied to a specific stock.
+    If no specific company or stock is discussed, return an empty array [].
+    Reply only in English.
+  user: |-
+    Analyze the following transcript excerpt and extract details for EVERY specific stock/company mentioned.
+
+    Return ONLY a JSON array. If no stocks are mentioned, return [].
+
+    JSON Format required:
+    [
+    {{
+        "company_name": "TICKER or Company Name",
+        "kpis_mentioned": ["list of financial numbers, revenue growth, product sales, margins, etc."],
+        "investment_thesis_bull": ["bull arguments mentioned by creator"],
+        "investment_thesis_bear": ["bear arguments or risks mentioned by creator"],
+        "strengths": ["specific strengths mentioned"],
+        "weaknesses": ["specific weaknesses mentioned"],
+        "catalysts": ["upcoming events, earnings, product launches mentioned"]
+    }}
+    ]
+
+    Transcript Excerpt:
+    {chunk_text}
+
+synthesis_json_data:
+  model: "qwen2.5:7b"
+  system: |-
+    You are a senior equity research analyst.
+    You say only what you see, you don’t make stuff up.
+    Synthesize raw extracted notes into a clean, concise stock analysis report.
+    Rely ONLY on the provided notes. Do not hallucinate external context.
+    Reply only in English.
+
+  user: |-
+    Generate a clean analysis for {stock_name}. Deduplicate facts and present them cleanly.
+
+    Raw Notes:
+    - KPIs/Metrics: {kpis_mentioned}
+    - Bull Case: {bull_thesis}
+    - Bear Case: {bear_thesis}
+    - Strengths: {strengths}
+    - Weaknesses: {weaknesses}
+    - Catalysts: {catalysts}
+
+    Format output as Markdown:
+
+    ### {stock_name}
+
+    **KPIs & Financial Metrics:**
+    - bullet points...
+
+    **Investment Thesis:**
+    - **Bull Case:** ...
+    - **Bear Case:** ...
+
+    **Specific Strengths:**
+    - bullet points...
+
+    **Specific Weaknesses:**
+    - bullet points...
+
+    **Key Catalysts:**
+    - bullet points...
