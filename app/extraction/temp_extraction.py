@@ -56,3 +56,38 @@ def extract_facts_from_chunk(chunk: str):
         print("Failed to parse JSON, skipping chunk.")
         return []
     return []
+
+
+def aggregate_extracted_data(
+    all_chunk_extractions: list[list[dict]],
+) -> dict:
+    """Combines extracted JSON pieces into a unified dictionary by Stock Name."""
+    grouped_stocks = defaultdict(
+        lambda: {
+            "kpis_mentioned": [],
+            "bull_thesis": [],
+            "bear_thesis": [],
+            "strengths": [],
+            "weaknesses": [],
+            "catalysts": [],
+        }
+    )
+    for chunk_data in all_chunk_extractions:
+        for item in chunk_data:
+            name = item.get("company_name", "").strip().upper()
+            if not name or len(name) < 2:
+                continue
+
+            # Append raw extracted facts
+            for key in [
+                "kpis_mentioned",
+                "bull_thesis",
+                "bear_thesis",
+                "strengths",
+                "weaknesses",
+                "catalysts",
+            ]:
+                if key in item and isinstance(item[key], list):
+                    grouped_stocks[name][key].extend(item[key])
+
+    return grouped_stocks

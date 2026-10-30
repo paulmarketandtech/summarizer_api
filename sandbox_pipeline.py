@@ -10,12 +10,17 @@ add info extractor and save it to json
 from pathlib import Path
 
 from app.config import config
-from app.extraction.temp_extraction import extract_facts_from_chunk
+from app.extraction.temp_extraction import (
+    aggregate_extracted_data,
+    extract_facts_from_chunk,
+)
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.services.lang_chunker import text_chunker
 
 TRANSCRIPTS_DIR = config.TRANSCRIPTS_DIR
-filename = "yt_2025-12-17_couchinvestor_q7YZQgxswZ0_transcript.txt"
+sofi_filename = "yt_2025-12-17_couchinvestor_q7YZQgxswZ0_transcript.txt"
+
+filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
 
 
 class ProcessTranscriptLocal:
@@ -45,12 +50,23 @@ class ProcessTranscriptLocal:
         return chunks_metadata
 
     def fact_extraction(self):
+        # TODO: think about extracting only a single chunk, no loop
+        # TODO: then implement the loop in another methiod ?...
         chunks = self.chunker()
         extracted_facts = []
         for chunk in chunks:
             extracted_facts.append(extract_facts_from_chunk(chunk["text"]))
 
         return extracted_facts
+
+    def extracted_agggregation(self):
+        facts = self.fact_extraction()
+        grouped_stocks = aggregate_extracted_data(facts)
+        return grouped_stocks
+
+    def create_final_report(self):
+        # TODO: create a final report so it's easier to read the output
+        ...
 
 
 # processor = ProcessTranscriptLocal(TRANSCRIPTS_DIR, filename, 4000, 800)
