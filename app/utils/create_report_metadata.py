@@ -28,7 +28,7 @@ def parse_ollama_ts(s: str | None) -> datetime | None:
     if not s:
         return None
     s = re.sub(r"(\.\d{6})\d+", r"\1", s)  # trim nanoseconds to microseconds
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return datetime.fromisoformat(s)
 
 
 def create_response_metadata(response) -> dict:

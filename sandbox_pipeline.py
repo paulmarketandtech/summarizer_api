@@ -1,13 +1,8 @@
-"""
-set local transcript file
-chunk it
+from __future__ import annotations
 
-do next:
-add info extractor and save it to json
-
-"""
-
-from pathlib import Path
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 from app.config import config
 from app.extraction.temp_extraction import (
@@ -15,84 +10,123 @@ from app.extraction.temp_extraction import (
     extract_facts_from_chunk,
     generate_stock_report,
 )
+
+# ─── Existing building blocks (unchanged, just imported) ───────────────
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.services.lang_chunker import text_chunker
 
-"""
-class ProcessTranscriptLocal:
-    def __init__(
-        self,
-        transcript_dir: Path,
-        filename: str,
-        max_chunk_size: int,
-        chunk_overlap: int,
-    ) -> None:
-        self.transcript_dir = transcript_dir
-        self.filename = filename
-        self.max_chunk_size = max_chunk_size
-        self.chunk_overlap = chunk_overlap
-"""
-
-
-class ProcessTranscriptLocal:
-    def __init__(self) -> None:
-        pass
-
-    def get_transcript_data(self, transcript_dir: Path, filename: str) -> dict:
-        fetcher = FileTranscriptFetcher(transcript_dir)
-        file_metadata = fetcher.fetch(filename)
-        return file_metadata
-
-    def chunker(self, raw_text, chunk_size, chunk_overlap) -> list:
-        chunks_metadata = text_chunker(
-            raw_transcript=raw_text,
-            max_chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-        )
-        return chunks_metadata
-
-    def fact_extraction(self, chunk_text) -> tuple[dict, dict]:
-        extracted_data, llm_chunk_metadata = extract_facts_from_chunk(chunk_text)
-
-        return extracted_data, llm_chunk_metadata
-
-    def extracted_agggregation(self, extracted_data: list):
-        grouped_stocks = aggregate_extracted_data(extracted_data)
-        return grouped_stocks
-
-    def create_final_report(self, grouped_stocks):
-
-        detected_companies = list(grouped_stocks.keys())
-        print(f"Companies Detected: {detected_companies}")
-
-        print("\nGenerating final reports per company...\n")
-        final_output = f"# Stock Analysis Report\n**Companies Found:** {', '.join(detected_companies)}\n\n---\n"
-
-        for stock_name, stock_data in grouped_stocks.items():
-            print(f"Synthesizing summary for: {stock_name}...")
-            llm_stock_metadata = generate_stock_report(stock_name, stock_data)
-            final_output += llm_stock_metadata["stock_full_text"] + "\n\n---\n"
-
-        return final_output
-
-
 TRANSCRIPTS_DIR = config.TRANSCRIPTS_DIR
-sofi_filename = "yt_2025-12-17_couchinvestor_q7YZQgxswZ0_transcript.txt"
-filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
 
-processor = ProcessTranscriptLocal()
-file_metadata = processor.get_transcript_data(TRANSCRIPTS_DIR, filename)
-chunks_metadata = processor.chunker(file_metadata["transcript_text"], 3500, 700)
 
-all_extractions = []
-for chunk in chunks_metadata:
-    extracted_data, llm_chunk_metadata = processor.fact_extraction(chunk["text"])
-    all_extractions.append(extracted_data)
+# ─── Config ────────────────────────────────────────────────────────────
+@dataclass
+class PipelineConfig:
+    """One config per video-type experiment."""
 
-print("pipeline")
-print("-" * 50)
-grouped_stocks = processor.extracted_agggregation(all_extractions)
-__import__("pprint").pprint(grouped_stocks)
+    filename: str
+    chunk_size: int = 3500
+    chunk_overlap: int = 700
+    # tag this run so you can tell results apart
+    run_tag: str = "default"
 
-final_output = processor.create_final_report(grouped_stocks)
-__import__("pprint").pprint(final_output)
+
+# ─── Stage: just a named callable ──────────────────────────────────────
+StageFn = Callable[[dict, PipelineConfig], Any]
+
+
+@dataclass
+class Stage:
+    name: str
+    fn: StageFn
+
+
+# ─── The runner ────────────────────────────────────────────────────────
+class Pipeline:
+    """
+    Executes stages in order.  Each stage receives:
+        ctx  – a dict that accumulates results under stage names
+        cfg  – the PipelineConfig for this run
+
+    A stage returns whatever it wants; the runner stores it as ctx[stage.name].
+    """
+
+    def __init__(self, stages: list[Stage]):
+        self.stages = stages
+
+    def run(self, cfg: PipelineConfig, *, start_from: str | None = None) -> dict:
+        ctx: dict[str, Any] = {}
+        started = start_from is None
+
+        for stage in self.stages:
+            if not started:
+                if stage.name == start_from:
+                    started = True
+                else:
+                    continue
+
+            print(f"▶ {stage.name}")
+            ctx[stage.name] = stage.fn(ctx, cfg)
+
+        return ctx
+
+
+# ─── The stages (pure functions – easy to swap) ────────────────────────
+def stage_fetch_transcript(ctx: dict, cfg: PipelineConfig) -> dict:
+    fetcher = FileTranscriptFetcher(TRANSCRIPTS_DIR)
+    return fetcher.fetch(cfg.filename)
+
+
+def stage_chunk(ctx: dict, cfg: PipelineConfig) -> list[dict]:
+    return text_chunker(
+        raw_transcript=ctx["fetch_transcript"]["transcript_text"],
+        max_chunk_size=cfg.chunk_size,
+        chunk_overlap=cfg.chunk_overlap,
+    )
+
+
+def stage_extract_facts(ctx: dict, cfg: PipelineConfig) -> list[dict]:
+    results = []
+    for i, chunk in enumerate(ctx["chunk"]):
+        extracted, _meta = extract_facts_from_chunk(chunk["text"])
+        results.append(extracted)
+    return results
+
+
+def stage_aggregate(ctx: dict, cfg: PipelineConfig) -> dict:
+    return aggregate_extracted_data(ctx["extract_facts"])
+
+
+def stage_report(ctx: dict, cfg: PipelineConfig) -> str:
+    grouped = ctx["aggregate"]
+    companies = list(grouped.keys())
+    print(f"Companies: {companies}")
+
+    parts = [f"# Stock Analysis Report\n**Companies:** {', '.join(companies)}\n\n---\n"]
+    for name, data in grouped.items():
+        print(f"  synthesising {name}…")
+        parts.append(generate_stock_report(name, data)["stock_full_text"])
+        parts.append("\n---\n")
+
+    return "\n".join(parts)
+
+
+# ─── Assemble the default pipeline ─────────────────────────────────────
+DEFAULT_PIPELINE = Pipeline(
+    [
+        Stage("fetch_transcript", stage_fetch_transcript),
+        Stage("chunk", stage_chunk),
+        Stage("extract_facts", stage_extract_facts),
+        Stage("aggregate", stage_aggregate),
+        Stage("report", stage_report),
+    ]
+)
+
+# run it
+cfg = PipelineConfig(
+    filename="yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt",
+    run_tag="stock_strict_v3",
+)
+
+ctx = DEFAULT_PIPELINE.run(cfg)
+
+print(ctx["report"])
