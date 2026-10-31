@@ -17,8 +17,8 @@ extract_data_to_json:
     {{
         "company_name": "TICKER or Company Name",
         "kpis_mentioned": ["list of financial numbers, revenue growth, product sales, margins, etc."],
-        "investment_thesis_bull": ["bull arguments mentioned by creator"],
-        "investment_thesis_bear": ["bear arguments or risks mentioned by creator"],
+        "bull_thesis": ["bull arguments mentioned by creator"],
+        "bear_thesis": ["bear arguments or risks mentioned by creator"],
         "strengths": ["specific strengths mentioned"],
         "weaknesses": ["specific weaknesses mentioned"],
         "catalysts": ["upcoming events, earnings, product launches mentioned"]
