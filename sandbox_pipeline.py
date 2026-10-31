@@ -127,6 +127,6 @@ cfg = PipelineConfig(
     run_tag="stock_strict_v3",
 )
 
-ctx = DEFAULT_PIPELINE.run(cfg)
+# ctx = DEFAULT_PIPELINE.run(cfg)
 
-print(ctx["report"])
+# print(ctx["report"])
