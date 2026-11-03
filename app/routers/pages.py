@@ -33,3 +33,10 @@ def rag_page(request: Request):
     return templates.TemplateResponse(
         request=request, name="rag.html", context={"request": request}
     )
+
+
+@router.get("/admin")
+async def admin_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="admin.html", context={"request": request}
+    )
