@@ -23,7 +23,7 @@ from collections.abc import Generator
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.storage.config import settings
+from app.config import config
 from app.storage.database import SessionApp, SessionReadOnly
 
 # ── DB Sessions ─────────────────────────────────────────
@@ -54,7 +54,7 @@ def get_db_write() -> Generator[Session, None, None]:
 def require_api_key(request: Request) -> None:
     """Check X-API-Key header. Used on /admin/* routes."""
     key = request.headers.get("X-API-Key")
-    if key != settings.ADMIN_API_KEY:
+    if key != config.ADMIN_API_KEY:
         raise HTTPException(status_code=403, detail="Invalid API key")
 
 

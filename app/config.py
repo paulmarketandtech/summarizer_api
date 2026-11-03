@@ -7,6 +7,7 @@ load_dotenv()
 
 
 class Config:
+    ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
     MODE = os.getenv("APP_MODE", "sandbox")
 
     SANDBOX_DATA_DIR = Path(os.getenv("SANDBOX_DATA_DIR", "./scratchpad"))

@@ -37,4 +37,6 @@ def rag_page(request: Request):
 
 @router.get("/admin")
 async def admin_page(request: Request):
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request, name="admin.html", context={"request": request}
+    )
