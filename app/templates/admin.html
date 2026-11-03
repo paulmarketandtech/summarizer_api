@@ -1,0 +1,42 @@
+<!-- app/templates/admin.html -->
+{% extends "base.html" %}
+
+{% block title %}Admin — Video Submission{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Submit Video</h1>
+
+    <form id="submit-form" class="admin-form">
+        <div class="form-group">
+            <label for="url">YouTube URL</label>
+            <input
+                type="url"
+                id="url"
+                name="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="video-type">Video Type</label>
+            <select id="video-type" name="video_type" required>
+                <option value="" disabled selected>Select type…</option>
+                <option value="stocks">Stocks</option>
+                <option value="macro">Macro</option>
+                <option value="drama_queen">Drama Queen</option>
+            </select>
+        </div>
+
+        <button type="submit" id="submit-btn">Submit</button>
+    </form>
+
+    <div id="status" class="status-box" hidden>
+        <p id="status-message"></p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/admin.js"></script>
+{% endblock %}

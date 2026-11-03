@@ -33,3 +33,27 @@ def feed_video(
     db.add(new_video)
     db.commit()
     return {"status": "created"}
+
+
+router = APIRouter(
+    prefix="/api/admin",
+    dependencies=[Depends(require_api_key)],
+)
+
+
+@router.post("/videos")
+async def submit_video(submission: VideoSubmission, db=Depends(get_db_write)):
+    # This is where your processing pipeline will go:
+    # 1. Extract video ID from URL
+    # 2. Fetch transcript
+    # 3. Pick prompt based on video_type
+    # 4. Send to Ollama for summary
+    # 5. Generate embeddings
+    # 6. Store everything in DB
+
+    # For now, just echo back to prove the wiring works:
+    return {
+        "status": "received",
+        "url": str(submission.url),
+        "video_type": submission.video_type,
+    }
