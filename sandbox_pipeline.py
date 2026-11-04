@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +18,7 @@ from app.processors.db_population import (
 from app.processors.managing_files import file_manager
 from app.services.embeddings import EmbeddingService
 from app.services.lang_chunker import text_chunker
+from app.utils.check_video_processed import check_id_in_db, get_processed_summary
 from app.utils.create_report_metadata import create_final_report_metadata
 
 # ─── Config ────────────────────────────────────────────────────────────
@@ -27,7 +29,7 @@ class PipelineConfig:
 
     source: str
     is_url: bool = False
-    chunk_size: int = 3500
+    chunk_size: int = 3000
     chunk_overlap: int = 700
     run_tag: str = "default"
 
@@ -215,13 +217,30 @@ def get_pipeline() -> Pipeline:
 
 
 filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
-filename = "yt_2025-12-17_couchinvestor_q7YZQgxswZ0_transcript.txt"
-url = "https://youtu.be/nPKlpvdL7TY"
+filename = "yt_2026-11-04_futurumequities_tmTJc5HfyBE_transcript.txt"
+url = "https://youtu.be/tmTJc5HfyBE"
 
-# sandbox
-cfg = PipelineConfig(source=filename, run_tag="strict_v3")
+
 # prod
-# cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
-
-ctx = get_pipeline().run(cfg)
-print(ctx["process"]["final_report"])
+if os.getenv("APP_MODE") == "prod":
+    print("I'm in PROD!!")
+    video_processed, yt_id = check_id_in_db(url)
+    if video_processed:
+        print("Video was already processed. Here you are!")
+        processed_title, processed_summary = get_processed_summary(yt_id)
+        print(f"{processed_title}\n---\n{processed_summary}")
+    else:
+        print("processing a new video on PROD")
+        start_time = time.perf_counter()
+        cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
+        ctx = get_pipeline().run(cfg)
+        print(ctx["process"]["final_report"])
+        processing_time = time.perf_counter() - start_time
+        update_full_processing_time(processing_time, yt_id)
+        print(processing_time)
+# sandbox
+else:
+    print("I'm in DEV!!")
+    cfg = PipelineConfig(source=filename, run_tag="strict_v3")
+    ctx = get_pipeline().run(cfg)
+    print(ctx["process"]["final_report"])
