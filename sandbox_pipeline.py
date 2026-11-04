@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -11,6 +12,7 @@ from app.extraction.temp_extraction import (
     aggregate_extracted_data,
     extract_facts_from_chunk,
     generate_stock_report,
+    process_transcript,
 )
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.fetchers.youtube_fetcher import YouTubeTranscriptFetcher
@@ -21,12 +23,7 @@ from app.processors.db_population import (
 from app.processors.managing_files import file_manager
 from app.services.embeddings import EmbeddingService
 from app.services.lang_chunker import text_chunker
-
-
-class SourceKind(str, Enum):
-    FILE = "file"
-    URL = "url"
-
+from app.utils.create_report_metadata import create_final_report_metadata
 
 # ─── Config ────────────────────────────────────────────────────────────
 
@@ -34,7 +31,6 @@ class SourceKind(str, Enum):
 @dataclass
 class PipelineConfig:
 
-    source_kind: SourceKind
     source: str
     is_url: bool = False
     chunk_size: int = 3500
@@ -99,12 +95,12 @@ class Pipeline:
 
 
 # ─── The stages (pure functions – easy to swap) ────────────────────────
-from app.fetchers.youtube_fetcher import YouTubeTranscriptFetcher
 
 
 def stage_fetch_transcript(ctx, cfg):
+
     fetcher = (
-        YoutubeTranscriptFetcher()
+        YouTubeTranscriptFetcher()
         if cfg.is_url
         else FileTranscriptFetcher(config.TRANSCRIPTS_DIR)
     )
@@ -133,6 +129,7 @@ def stage_chunk(ctx: dict, cfg: PipelineConfig) -> list[dict]:
     )
 
 
+"""
 def stage_extract_facts(ctx: dict, cfg: PipelineConfig) -> list[dict]:
     results = []
     for i, chunk in enumerate(ctx["chunk"]):
@@ -157,6 +154,22 @@ def stage_report(ctx: dict, cfg: PipelineConfig) -> str:
         parts.append("\n---\n")
 
     return "\n".join(parts)
+"""
+
+
+def stage_process(ctx, cfg):
+    final_report, llm_chunks_metadata, llm_stocks_metadata = process_transcript(
+        ctx["chunk"]
+    )
+    report_metadata = create_final_report_metadata(
+        final_report, ctx["fetch_transcript"]["transcript_file_name"]
+    )
+    return {
+        "final_report": final_report,
+        "llm_chunks_metadata": llm_chunks_metadata,
+        "llm_stocks_metadata": llm_stocks_metadata,
+        "report_metadata": report_metadata,
+    }
 
 
 def stage_embed(ctx, cfg):
@@ -178,7 +191,7 @@ def stage_embed(ctx, cfg):
 def stage_persist(ctx, cfg):
     p = ctx["process"]
     db_population_manager(
-        ctx["fetch"],
+        ctx["fetch_transcript"],
         ctx["chunk"],
         p["llm_chunks_metadata"],
         p["llm_stocks_metadata"],
@@ -187,26 +200,55 @@ def stage_persist(ctx, cfg):
 
 
 def stage_archive(ctx, cfg):
-    file_manager(ctx["fetch"], ctx["process"]["report_metadata"])
+    file_manager(ctx["fetch_transcript"], ctx["process"]["report_metadata"])
 
 
 # ─── Assemble the default pipeline ─────────────────────────────────────
-DEFAULT_PIPELINE = Pipeline(
-    [
-        Stage("fetch_transcript", stage_fetch_transcript),
-        Stage("chunk", stage_chunk),
-        Stage("extract_facts", stage_extract_facts),
-        Stage("aggregate", stage_aggregate),
-        Stage("report", stage_report),
-    ]
+
+CORE = [
+    Stage("fetch_transcript", stage_fetch_transcript),
+    Stage("chunk", stage_chunk),
+    Stage("process", stage_process),
+]
+
+SANDBOX = Pipeline("sandbox", CORE)
+
+PROD = Pipeline(
+    "prod",
+    CORE
+    + [
+        Stage("embed", stage_embed),
+        Stage("persist", stage_persist),
+        Stage("archive", stage_archive),
+    ],
 )
 
-# run it
-cfg = PipelineConfig(
-    filename="yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt",
-    run_tag="stock_strict_v3",
-)
+PIPELINES = {"sandbox": SANDBOX, "prod": PROD}
 
-# ctx = DEFAULT_PIPELINE.run(cfg)
 
-# print(ctx["report"])
+def get_pipeline() -> Pipeline:
+    name = os.getenv("APP_MODE") or ("sandbox" if config.MODE == "sandbox" else "prod")
+    return PIPELINES[name]
+
+
+filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
+filename = "yt_2025-12-17_couchinvestor_q7YZQgxswZ0_transcript.txt"
+url = "https://youtu.be/nPKlpvdL7TY"
+
+# sandbox
+cfg = PipelineConfig(source=filename, run_tag="strict_v3")
+# ctx = SANDBOX.run(cfg)
+ctx = get_pipeline().run(cfg)
+print(ctx["process"]["final_report"])
+
+
+# tweak report prompt, rerun just that part — fetch/chunk already in ctx
+# (note: start_from="process" redoes extraction too, since they're one stage.
+#  Split stage_process in two later if that gets annoying.)
+
+# prod
+"""
+cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
+ctx = get_pipeline().run(cfg)
+print(ctx["process"]["final_report"])
+"""

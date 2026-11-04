@@ -121,3 +121,37 @@ def generate_stock_report(stock_name: str, stock_data: dict) -> dict:
     )
 
     return llm_stock_metadata
+
+
+def process_transcript(all_chunks: list[dict]):
+    print(f"Total Chunks: {len(all_chunks)}")
+
+    print("\n2. Extracting structured data from chunks...")
+    all_extractions = []
+    llm_chunks_metadata = []
+    for idx, chunk in enumerate(all_chunks):
+        print(f"Processing chunk {idx + 1}/{len(all_chunks)}...")
+
+        facts, llm_chunk_metadata = extract_facts_from_chunk(chunk["text"])
+        all_extractions.append(facts)
+
+        llm_chunk_metadata["chunk_index"] = idx
+        llm_chunk_metadata["total_chunks_number"] = len(all_chunks)
+        llm_chunks_metadata.append(llm_chunk_metadata)
+
+    print("\n3. Aggregating facts per company...")
+    grouped_stocks = aggregate_extracted_data(all_extractions)
+    detected_companies = list(grouped_stocks.keys())
+    print(f"Companies Detected: {detected_companies}")
+
+    print("\n4. Generating final reports per company...\n")
+    final_output = f"# Stock Analysis Report\n**Companies Found:** {', '.join(detected_companies)}\n\n---\n"
+
+    llm_stocks_metadata = []
+    for stock_name, stock_data in grouped_stocks.items():
+        print(f"Synthesizing summary for: {stock_name}...")
+        llm_stock_metadata = generate_stock_report(stock_name, stock_data)
+        final_output += llm_stock_metadata["stock_full_text"] + "\n\n---\n"
+        llm_stocks_metadata.append(llm_stock_metadata)
+
+    return final_output, llm_chunks_metadata, llm_stocks_metadata
