@@ -2,10 +2,10 @@ from dotenv import load_dotenv
 from sqlalchemy import select
 
 load_dotenv()
-from src.extraction.youtube_transcript import extract_youtube_id
-from src.storage.database import get_session
-from src.storage.models import Video
-from src.storage.query_service import VideoQueryService
+from app.fetchers.youtube_fetcher import YouTubeTranscriptFetcher
+from app.storage.database import get_session
+from app.storage.models import Video
+from app.storage.query_service import VideoQueryService
 
 
 def get_all_yt_ids():
@@ -18,7 +18,8 @@ def get_all_yt_ids():
 
 
 def check_id_in_db(url: str) -> tuple[bool, str | None]:
-    new_id = extract_youtube_id(url)
+    new_id = YouTubeTranscriptFetcher().extract_youtube_id(url)
+    # new_id = yt_fetcher.extract_youtube_id(url)
     processed_ids = get_all_yt_ids()
     return new_id in processed_ids, new_id
 
