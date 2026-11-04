@@ -4,13 +4,27 @@ from app.storage.config import settings
 
 
 class EmbeddingService:
+    def __init__(self):
+        self.url = f"{settings.OLLAMA_URL}/api/embeddings"
+        self.model = settings.EMBEDDING_MODEL
+        self._client = httpx.Client(timeout=120)
+
+    def embed_text_sync(self, text: str) -> list[float]:
+        r = self._client.post(self.url, json={"model": self.model, "prompt": text})
+        r.raise_for_status()
+        return r.json()["embedding"]
+
+
+"""
+DELETE?
+class EmbeddingService:
 
     def __init__(self):
         self.url = f"{settings.OLLAMA_URL}/api/embeddings"
         self.model = settings.EMBEDDING_MODEL
 
     def embed_text_sync(self, text: str) -> list[float]:
-        """Sync version for use in non-async routes."""
+        Sync version for use in non-async routes.
         import httpx
 
         with httpx.Client(timeout=120) as client:
@@ -29,3 +43,5 @@ class EmbeddingService:
             )
             response.raise_for_status()
             return response.json()["embedding"]
+
+"""

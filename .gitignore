@@ -3,7 +3,7 @@ venv/
 env/
 .venv
 
-# Data & Archives (can be huge)
+# Data & Archives
 archive/
 data/
 *.db
