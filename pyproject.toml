@@ -47,7 +47,8 @@ ignore = ["DTZ007"]
 # Exclude a specific file or directory
 extend-exclude = [
     "vendor/*",
-    "**/migrations/*.py"
+    "**/migrations/*.py",
+    "/tests/"
 ]   
 [tool.bandit]
 exclude_dirs = [".venv", "tests", "build", "dist", "__pycache__"]   

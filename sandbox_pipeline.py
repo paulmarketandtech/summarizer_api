@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,14 +10,10 @@ from app.config import config
 from app.extraction.temp_extraction import process_transcript
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.fetchers.youtube_fetcher import YouTubeTranscriptFetcher
-from app.processors.db_population import (
-    db_population_manager,
-    update_full_processing_time,
-)
+from app.processors.db_population import db_population_manager
 from app.processors.managing_files import file_manager
 from app.services.embeddings import EmbeddingService
 from app.services.lang_chunker import text_chunker
-from app.utils.check_video_processed import check_id_in_db, get_processed_summary
 from app.utils.create_report_metadata import create_final_report_metadata
 
 # ─── Config ────────────────────────────────────────────────────────────
