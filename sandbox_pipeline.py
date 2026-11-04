@@ -220,7 +220,7 @@ def get_pipeline() -> Pipeline:
 # filename = "yt_2026-11-04_futurumequities_tmTJc5HfyBE_transcript.txt"
 # url = "https://youtu.be/tmTJc5HfyBE"
 
-
+"""
 # prod
 if os.getenv("APP_MODE") == "prod":
     print("I'm in PROD!!")
@@ -244,3 +244,4 @@ else:
     cfg = PipelineConfig(source=filename, run_tag="strict_v3")
     ctx = get_pipeline().run(cfg)
     print(ctx["process"]["final_report"])
+"""
