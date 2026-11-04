@@ -2,18 +2,12 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from app.config import config
-from app.extraction.temp_extraction import (
-    aggregate_extracted_data,
-    extract_facts_from_chunk,
-    generate_stock_report,
-    process_transcript,
-)
+from app.extraction.temp_extraction import process_transcript
 from app.fetchers.file_fetcher import FileTranscriptFetcher
 from app.fetchers.youtube_fetcher import YouTubeTranscriptFetcher
 from app.processors.db_population import (
@@ -97,7 +91,7 @@ class Pipeline:
 # ─── The stages (pure functions – easy to swap) ────────────────────────
 
 
-def stage_fetch_transcript(ctx, cfg):
+def stage_fetch_transcript(ctx: dict, cfg: PipelineConfig) -> dict:
 
     fetcher = (
         YouTubeTranscriptFetcher()
@@ -105,20 +99,6 @@ def stage_fetch_transcript(ctx, cfg):
         else FileTranscriptFetcher(config.TRANSCRIPTS_DIR)
     )
     return fetcher.fetch(cfg.source)
-
-
-"""
-probably to be deleted
-def stage_fetch_transcript(ctx: dict, cfg: PipelineConfig) -> dict:
-    if cfg.source_kind is SourceKind.FILE:
-        return FileTranscriptFetcher(config.TRANSCRIPTS_DIR).fetch(cfg.source)
-    return YoutubeTranscriptFetcher().fetch(cfg.source)
-
-
-def stage_fetch_transcript_old(ctx: dict, cfg: PipelineConfig) -> dict:
-    fetcher = FileTranscriptFetcher(config.TRANSCRIPTS_DIR)
-    return fetcher.fetch(cfg.filename)
-"""
 
 
 def stage_chunk(ctx: dict, cfg: PipelineConfig) -> list[dict]:
@@ -130,6 +110,10 @@ def stage_chunk(ctx: dict, cfg: PipelineConfig) -> list[dict]:
 
 
 """
+# tweak report prompt, rerun just that part — fetch/chunk already in ctx
+# (note: start_from="process" redoes extraction too, since they're one stage.
+#  Split stage_process in two later if that gets annoying.)
+# Those 3 funcs could go instead of stage_process
 def stage_extract_facts(ctx: dict, cfg: PipelineConfig) -> list[dict]:
     results = []
     for i, chunk in enumerate(ctx["chunk"]):
@@ -157,7 +141,7 @@ def stage_report(ctx: dict, cfg: PipelineConfig) -> str:
 """
 
 
-def stage_process(ctx, cfg):
+def stage_process(ctx: dict, cfg: PipelineConfig) -> dict:
     final_report, llm_chunks_metadata, llm_stocks_metadata = process_transcript(
         ctx["chunk"]
     )
@@ -172,7 +156,7 @@ def stage_process(ctx, cfg):
     }
 
 
-def stage_embed(ctx, cfg):
+def stage_embed(ctx: dict, cfg: PipelineConfig):
     svc = EmbeddingService()
     p = ctx["process"]
 
@@ -185,10 +169,9 @@ def stage_embed(ctx, cfg):
     p["report_metadata"]["embedding"] = svc.embed_text_sync(
         p["report_metadata"]["final_report"]
     )
-    return True  # mutates in place, nothing to return
 
 
-def stage_persist(ctx, cfg):
+def stage_persist(ctx: dict, cfg: PipelineConfig):
     p = ctx["process"]
     db_population_manager(
         ctx["fetch_transcript"],
@@ -199,7 +182,7 @@ def stage_persist(ctx, cfg):
     )
 
 
-def stage_archive(ctx, cfg):
+def stage_archive(ctx: dict, cfg: PipelineConfig):
     file_manager(ctx["fetch_transcript"], ctx["process"]["report_metadata"])
 
 
@@ -237,18 +220,8 @@ url = "https://youtu.be/nPKlpvdL7TY"
 
 # sandbox
 cfg = PipelineConfig(source=filename, run_tag="strict_v3")
-# ctx = SANDBOX.run(cfg)
-ctx = get_pipeline().run(cfg)
-print(ctx["process"]["final_report"])
-
-
-# tweak report prompt, rerun just that part — fetch/chunk already in ctx
-# (note: start_from="process" redoes extraction too, since they're one stage.
-#  Split stage_process in two later if that gets annoying.)
-
 # prod
-"""
-cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
+# cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
+
 ctx = get_pipeline().run(cfg)
 print(ctx["process"]["final_report"])
-"""
