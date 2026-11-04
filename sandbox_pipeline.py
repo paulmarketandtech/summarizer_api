@@ -216,9 +216,9 @@ def get_pipeline() -> Pipeline:
     return PIPELINES[name]
 
 
-filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
-filename = "yt_2026-11-04_futurumequities_tmTJc5HfyBE_transcript.txt"
-url = "https://youtu.be/tmTJc5HfyBE"
+# filename = "yt_2026-08-10_josephcarlsonafterhours_TA6rz8gLQxI_transcript.txt"
+# filename = "yt_2026-11-04_futurumequities_tmTJc5HfyBE_transcript.txt"
+# url = "https://youtu.be/tmTJc5HfyBE"
 
 
 # prod
