@@ -6,14 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusMsg = document.getElementById("status-message");
     const submitBtn = document.getElementById("submit-btn");
 
-    // Prompt once per browser session, then remember
-    let apiKey = sessionStorage.getItem("admin_api_key");
-    if (!apiKey) {
-        apiKey = prompt("Enter admin API key:");
-        if (apiKey) {
-            sessionStorage.setItem("admin_api_key", apiKey);
-        }
-    }
+    const resultsCard = document.getElementById("results");
+    const resultsTitle = document.getElementById("results-title");
+    const resultsBadge = document.getElementById("results-badge");
+    const resultsMeta = document.getElementById("results-meta");
+    const resultsSummary = document.getElementById("results-summary");
+    const clearBtn = document.getElementById("clear-btn");
+
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -21,21 +20,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = document.getElementById("url").value.trim();
         const videoType = document.getElementById("video-type").value;
 
-        if (!apiKey) {
-            showStatus("No API key provided.", "error");
-            return;
-        }
 
         submitBtn.disabled = true;
-        submitBtn.textContent = "Submitting…";
-        showStatus("Sending…", "info");
+        submitBtn.textContent = "Processing…";
+        resultsCard.hidden = true;
+        showStatus("Submitting…", "info");
 
         try {
-            const res = await fetch("/api/admin/videos", {
+            const res = await fetch("/admin/videos", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-API-Key": apiKey,
                 },
                 body: JSON.stringify({ url, video_type: videoType }),
             });
@@ -43,16 +38,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (!res.ok) {
-                // If 403, clear the cached key so they get prompted again
                 if (res.status === 403) {
                     sessionStorage.removeItem("admin_api_key");
                 }
-                showStatus(data.detail || `Error: ${res.status}`, "error");
+                showStatus(data.detail || `Error ${res.status}`, "error");
                 return;
             }
 
-            showStatus(`Received: ${data.video_type} — ${data.url}`, "success");
+            // Hide the status bar, show the results card
+            statusBox.hidden = true;
+            showResults(data);
             form.reset();
+
         } catch (err) {
             showStatus(`Network error: ${err.message}`, "error");
         } finally {
@@ -60,6 +57,36 @@ document.addEventListener("DOMContentLoaded", () => {
             submitBtn.textContent = "Submit";
         }
     });
+
+    clearBtn.addEventListener("click", () => {
+        resultsCard.hidden = true;
+    });
+
+    function showResults(data) {
+        resultsTitle.textContent = data.title;
+
+        // Badge: "Cached" (blue) vs "Processed" (green)
+        if (data.status === "cached") {
+            resultsBadge.textContent = "Cached";
+            resultsBadge.className = "badge badge-cached";
+        } else {
+            resultsBadge.textContent = "Processed";
+            resultsBadge.className = "badge badge-processed";
+        }
+
+        // Meta line: type + processing time
+        let meta = `Type: ${data.video_type}`;
+        if (data.processing_time != null) {
+            meta += ` · ${data.processing_time}s`;
+        }
+        resultsMeta.textContent = meta;
+
+        // Summary text — preserve whitespace/newlines from the LLM output
+        resultsSummary.textContent = data.summary;
+
+        resultsCard.hidden = false;
+        resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
     function showStatus(msg, type) {
         statusBox.hidden = false;

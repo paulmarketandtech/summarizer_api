@@ -6,10 +6,13 @@ services:
     env_file: .env
     environment:
       - ENV=dev
+      - ARCHIVE_DIR=/app/archive
+      - PROMPTS_FILE_PATH=/app/prompts/prompts.yaml
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app/app
       - ./main.py:/app/main.py
+      - ./archive:/app/archive
     command:
       ["fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]

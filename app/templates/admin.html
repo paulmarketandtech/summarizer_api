@@ -35,6 +35,17 @@
     <div id="status" class="status-box" hidden>
         <p id="status-message"></p>
     </div>
+        <!-- Results card: hidden until a video is processed -->
+    <div id="results" class="results-card" hidden>
+        <div class="results-header">
+            <h2 id="results-title"></h2>
+            <span id="results-badge" class="badge"></span>
+        </div>
+        <div class="results-meta" id="results-meta"></div>
+        <div class="results-summary" id="results-summary"></div>
+        <button id="clear-btn" class="clear-btn">Clear</button>
+    </div>
+</div>
 </div>
 {% endblock %}
 {% block scripts %}

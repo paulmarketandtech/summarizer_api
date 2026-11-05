@@ -116,8 +116,9 @@ def db_population_manager(
 
 def update_full_processing_time(duration: float, yt_id: str) -> None:
     with get_session() as session:
-        video_id_original = session.query(Video.id).filter(Video.yt_id == yt_id)
-
+        video_id_original = (
+            session.query(Video.id).filter(Video.yt_id == yt_id).scalar()
+        )
         stmt = (
             update(Summary)
             .where(Summary.video_id == video_id_original)
