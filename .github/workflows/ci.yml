@@ -18,6 +18,7 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg17
         env:
+          PROMPTS_FILE_PATH: ./prompts/prompts.yaml
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_db
