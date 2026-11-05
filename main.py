@@ -13,15 +13,15 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db_read
 from app.routers import admin, internal, pages, public
 
+log_dir = Path(__file__).resolve().parents[0] / "archive" / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    handlers=[
-        logging.FileHandler(
-            Path(__file__).resolve().parents[0] / "archive" / "logs" / "summarizer.log"
-        )
-    ],
+    handlers=[logging.FileHandler(log_dir / "summarizer.log")],
 )
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
