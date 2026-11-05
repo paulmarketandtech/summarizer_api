@@ -7,7 +7,7 @@ services:
     environment:
       - ENV=dev
       - ARCHIVE_DIR=/app/archive
-      - PROMPTS_FILE_PATH=./prompts/prompts.yaml
+      - PROMPTS_FILE_PATH=/app/prompts/prompts.yaml
     ports:
       - "8000:8000"
     volumes:
