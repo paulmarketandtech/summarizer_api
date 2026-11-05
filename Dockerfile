@@ -16,9 +16,6 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY . .
 RUN uv sync --frozen --no-dev --no-install-project
 
-RUN groupadd --system app && useradd --system --gid app app
-USER app
-
 EXPOSE 8000
 
 CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]

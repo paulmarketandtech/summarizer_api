@@ -216,23 +216,7 @@ def get_pipeline() -> Pipeline:
 # url = "https://youtu.be/tmTJc5HfyBE"
 
 """
-# prod
-if os.getenv("APP_MODE") == "prod":
-    print("I'm in PROD!!")
-    video_processed, yt_id = check_id_in_db(url)
-    if video_processed:
-        print("Video was already processed. Here you are!")
-        processed_title, processed_summary = get_processed_summary(yt_id)
-        print(f"{processed_title}\n---\n{processed_summary}")
-    else:
-        print("processing a new video on PROD")
-        start_time = time.perf_counter()
-        cfg = PipelineConfig(source=url, is_url=True, run_tag="strict_v3")
-        ctx = get_pipeline().run(cfg)
-        print(ctx["process"]["final_report"])
-        processing_time = time.perf_counter() - start_time
-        update_full_processing_time(processing_time, yt_id)
-        print(processing_time)
+this has to go to ./scratchpad/ somewhere
 # sandbox
 else:
     print("I'm in DEV!!")

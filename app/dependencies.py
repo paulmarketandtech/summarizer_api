@@ -51,6 +51,7 @@ def get_db_write() -> Generator[Session, None, None]:
 # ── Auth ────────────────────────────────────────────────
 
 
+# TODO: probably to be deleted
 def require_api_key(request: Request) -> None:
     """Check X-API-Key header. Used on /admin/* routes."""
     key = request.headers.get("X-API-Key")
