@@ -1,0 +1,146 @@
+import os
+from datetime import datetime
+from typing import Literal, Optional
+
+import requests
+from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+
+load_dotenv()
+
+# model: str = "qwen2.5:7b",
+# model: str = "llama3.2:3b",
+
+
+class OllamaClient:
+    def __init__(self, ollama_host) -> None:
+        self.host = ollama_host
+
+    def generate(
+        self,
+        user_prompt: str,
+        system_prompt: str | None,
+        model: str = "qwen2.5:7b",
+        temperature: float = 0.2,
+        top_p: float = 0.9,
+        top_k: int = 40,
+        json_mode: bool | dict = False,
+    ) -> dict:
+
+        payload = {
+            "model": model,
+            "prompt": user_prompt,
+            "system": system_prompt,
+            "stream": False,
+            "options": {
+                "temperature": temperature,
+                "top_p": top_p,
+                "top_k": top_k,
+                "num_predict": 1000,
+            },
+        }
+        if isinstance(json_mode, dict):
+            payload["format"] = json_mode
+        elif json_mode:
+            payload["format"] = "json"
+
+        response = requests.post(f"{self.host}/api/generate", json=payload)
+        response.raise_for_status()
+
+        return response.json()
+
+
+class StockQueryFilter(BaseModel):
+    company_name: Optional[str] = Field(
+        None,
+        description="The specific stock ticker or company name mentioned (e.g., NVDA, Apple). Keep as null if generic.",
+    )
+    time_period: Optional[Literal["Q1", "Q2", "Q3", "Q4", "Full Year"]] = Field(
+        None, description="The specific quarter or year period mentioned in the query."
+    )
+    year: Optional[int] = Field(
+        None, description="The 4-digit year mentioned in the query (e.g., 2025, 2026)."
+    )
+    semantic_meaning: str = Field(
+        ...,
+        description="The core financial concept or topic they are asking about (e.g., earnings report, inflation, stock split).",
+    )
+
+
+class QueryRouterResponse(BaseModel):
+    is_stock_market_related: bool = Field(
+        ...,
+        description="True ONLY if the query is strictly about the stock market, investing, or public companies. False for recipes, code, general talk and everything else.",
+    )
+    # Changed from a List to a single Optional object to prevent split-token hallucinations
+    filters: Optional[StockQueryFilter] = Field(
+        None,
+        description="Extracted metadata filters. Leave as null if is_stock_market_related is False.",
+    )
+
+
+# --- 2. Build the System Prompt with the Current Date Context ---
+current_date = datetime.now().strftime("%Y-%m-%d")
+
+system_prom = f"""
+You are an advanced query parser for a stock video archive. 
+Today's date is strictly {current_date}. 
+
+Your jobs:
+1. Classify if the prompt is related to the stock market, investing, or corporate data. If not, set is_stock_market_related to false.
+2. If related, set is_stock_market_related to true and extract query filters. 
+3. Calculate explicit YYYY-MM-DD calendar dates for filters using today's date context ({current_date}) whenever the user mentions relative periods (e.g. 'last week', 'Q1 2025').
+- Never use outside knowledge about company details or events.
+"""
+
+system_prompt = """
+You are a strict metadata extraction router. Your job is to classify incoming queries and extract key financial entities into a single structured filter block.
+
+Rules:
+1. If the query is unrelated to finance or stocks (like pizza recipes), set is_stock_market_related to false and filters to null.
+2. If related, set is_stock_market_related to true and fill the single filters object.
+3. Do NOT split information into multiple objects. Put the company name, time period, year, and semantic meaning all into the exact same filters block.
+4. Extract the year as an integer and the time_period exactly as mentioned.
+- Never use outside knowledge or make assumptions.
+"""
+
+
+# --- 3. Execute the Client Call ---
+ollama_host = os.getenv("OLLAMA_HOST")
+client = OllamaClient(ollama_host)
+
+# We pass the schema straight into json_mode
+rag_res = client.generate(
+    user_prompt="what did people say about nvidia earnings in Q1 2025",
+    system_prompt=system_prompt,
+    json_mode=QueryRouterResponse.model_json_schema(),
+)
+
+# Parse the text inside the raw response message back to Pydantic
+import json
+
+response_data = json.loads(rag_res["response"])
+parsed_result = QueryRouterResponse.model_validate(response_data)
+
+if not parsed_result.is_stock_market_related or not parsed_result.filters:
+    print("Sorry, no data for this query.")
+else:
+    f = parsed_result.filters
+    print(f"Company: {f.company_name}")  # 'NVIDIA'
+    print(f"Period:  {f.time_period}")  # 'Q1'
+    print(f"Year:    {f.year}")  # 2025
+    print(f"Meaning: {f.semantic_meaning}")  # 'earnings report'
+
+    # Handle the date boundaries safely in your Python code where it won't hallucinate:
+    date_after = None
+    date_before = None
+
+    if f.year and f.time_period:
+        quarter_mappings = {
+            "Q1": (f"{f.year}-01-01", f"{f.year}-03-31"),
+            "Q2": (f"{f.year}-04-01", f"{f.year}-06-30"),
+            "Q3": (f"{f.year}-07-01", f"{f.year}-09-30"),
+            "Q4": (f"{f.year}-10-01", f"{f.year}-12-31"),
+            "Full Year": (f"{f.year}-01-01", f"{f.year}-12-31"),
+        }
+        date_after, date_before = quarter_mappings[f.time_period]

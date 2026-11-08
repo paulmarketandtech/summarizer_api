@@ -21,7 +21,7 @@ class VideoPublic(BaseModel):
 class VideoDetailPublic(VideoPublic):
     """Includes the full summary when user expands a card."""
 
-    summary: str | None  # populated from Summary.final_report
+    summary: str | None
 
 
 class FilterOptions(BaseModel):

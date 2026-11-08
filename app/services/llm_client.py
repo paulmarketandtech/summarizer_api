@@ -1,3 +1,9 @@
+import requests
+
+# model: str = "qwen2.5:7b",
+# model: str = "llama3.2:3b",
+
+
 class OllamaClient:
     def __init__(self, ollama_host) -> None:
         self.host = ollama_host
@@ -10,10 +16,8 @@ class OllamaClient:
         temperature: float = 0.2,
         top_p: float = 0.9,
         top_k: int = 40,
-        json_mode: bool = False,
-    ) -> str:
-
-        import requests
+        json_mode: bool | dict = False,
+    ) -> dict:
 
         payload = {
             "model": model,
@@ -27,7 +31,9 @@ class OllamaClient:
                 "num_predict": 1000,
             },
         }
-        if json_mode:
+        if isinstance(json_mode, dict):
+            payload["format"] = json_mode
+        elif json_mode:
             payload["format"] = "json"
 
         response = requests.post(f"{self.host}/api/generate", json=payload)
