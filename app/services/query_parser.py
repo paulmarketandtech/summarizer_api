@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 
 from app.schemas.parse_rag_query import ParsedRagQuery
 from app.services.llm_client import OllamaClient
+from app.services.rag import RagService
 from app.services.rag_date_conventer import quarter_to_date_range
+from app.storage.database import get_session
 
 load_dotenv()
 prompts_file = os.getenv("PROMPTS_FILE_PATH")
@@ -46,12 +48,24 @@ class QueryParser:
 ollama_host = os.getenv("OLLAMA_HOST")
 parser = QueryParser(ollama_host=ollama_host)
 
-"""
 parsed = parser.parse(
-    "What concerns did people have about inflation and interest rates in Q4 2023?"
+    "What concerns did people have about inflation and interest rates in Q4 2023?",
+    system_prompt,
 )
 """
 parsed = parser.parse(
     "What did people say about Nvidia earnings in Q1 2025?", system_prompt
 )
-print(parsed)
+"""
+extracted_query = parsed.embedding_query
+
+print("-" * 50)
+print(extracted_query)
+print("-" * 50)
+
+with get_session() as session:
+    service = RagService(session)
+top_five = service.search(extracted_query, top_k=5)
+for top in top_five:
+    print(f"{top['similarity']}\n{top['source']}\n{top['text'][:100]}")
+    print("+" * 50)
