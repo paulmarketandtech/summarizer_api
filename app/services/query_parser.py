@@ -11,7 +11,9 @@ from app.services.rag_date_conventer import quarter_to_date_range
 from app.storage.database import get_session
 
 load_dotenv()
+
 prompts_file = os.getenv("PROMPTS_FILE_PATH")
+
 if not prompts_file:
     raise RuntimeError(
         "Environment variable PROMPTS_FILE_PATH is not set. "
@@ -30,7 +32,7 @@ class QueryParser:
     def __init__(self, ollama_host: str):
         self.client = OllamaClient(ollama_host)
 
-    def parse(self, user_query: str, system_prompt: str) -> ParsedRagQuery:
+    def parse(self, user_query: str) -> ParsedRagQuery:
         response = self.client.generate(
             user_prompt=user_query,
             system_prompt=system_prompt,
@@ -44,9 +46,6 @@ class QueryParser:
 
         return ParsedRagQuery.model_validate_json(raw_json)
 
-
-ollama_host = os.getenv("OLLAMA_HOST")
-parser = QueryParser(ollama_host=ollama_host)
 
 parsed = parser.parse(
     "What concerns did people have about inflation and interest rates in Q4 2023?",
