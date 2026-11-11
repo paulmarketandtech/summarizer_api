@@ -7,6 +7,7 @@ from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db_read
+from app.schemas.parse_rag_query import RagSearchResponse
 from app.schemas.public import (
     Page,
     RagQuery,
@@ -15,10 +16,11 @@ from app.schemas.public import (
     VideoPublicItem,
     VideoSearchParams,
 )
-from app.services.rag import RagService
+from app.services.rag_filter import RagService
 from app.services.videos import VideoService
 from app.storage.database import get_session, get_session_read_only
 from app.storage.models import Summary, Video
+from rag_pipeline import build_rag_search_pipeline
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -53,6 +55,17 @@ def get_vid(video_id: UUID):
         return video
 
 
+@router.post("/rag", response_model=RagSearchResponse)
+def rag_search(
+    db: Annotated[Session, Depends(get_db_read)],
+    body: RagQuery,
+):
+    pipeline = build_rag_search_pipeline(db)
+
+    return pipeline.run(body.query)
+
+
+"""
 @router.post("/rag", response_model=list[RagResult])
 def rag_search(
     db: Annotated[Session, Depends(get_db_read)],
@@ -60,6 +73,7 @@ def rag_search(
 ):
     service = RagService(db)
     return service.search(body.query, top_k=5)
+"""
 
 
 def escape_like(value: str) -> str:

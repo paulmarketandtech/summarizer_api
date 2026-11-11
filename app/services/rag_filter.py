@@ -49,6 +49,7 @@ class RagService:
         min_similarity: float = MIN_SIMILARITY,
         chunk_filters=None,
         stock_filters=None,
+        # company_names=None,
     ) -> list[SearchHit]:
         qv = self.embedder.embed_text_sync(query)
 
@@ -113,6 +114,7 @@ class RagService:
 with get_session() as session:
     rag = RagService(session)
 
+"""
 queries = [
     "nvidia earnings",  # should hit
     "what does he think about AMD",  # should hit
@@ -129,3 +131,4 @@ for q in queries:
         print("+" * 50)
         print(f"  {h.similarity:.3f} \n {h.source} \n {h.text[:60]} ||\n")
         # print(f"  {h['similarity']:.3f} \n {h['source']} \n {h['text'][:60]} ||\n")
+"""
