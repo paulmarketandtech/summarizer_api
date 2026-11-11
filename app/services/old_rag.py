@@ -69,3 +69,26 @@ class RagService:
         # 4. Combine all results, sort by similarity, take top_k
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
+
+
+"""
+from app.storage.database import get_session
+
+with get_session() as session:
+    rag = RagService(session)
+
+queries = [
+    "nvidia earnings",  # should hit
+    "what does he think about AMD",  # should hit
+    "pizza recipe",  # should miss
+    "how to fix a bicycle tyre",  # should miss
+    "the weather in Poland",  # should miss
+]
+
+for q in queries:
+    hits = rag.search(q, top_k=3)
+    print(f"\n{q}")
+    print("-" * 50)
+    for h in hits:
+        print(f"  {h['similarity']:.3f} \n {h['source']} \n {h['text'][:60]} ||\n")
+"""
