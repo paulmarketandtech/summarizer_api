@@ -33,7 +33,7 @@ class ParsedRagQuery(BaseModel):
 
     @property
     def is_searchable(self) -> bool:
-        return self.scope != "unrelated"
+        return self.category != "unrelated"
 
 
 @dataclass(frozen=True)
@@ -49,8 +49,8 @@ class RagSearchConfig:
 class RetrievalFilters(BaseModel):
     companies: list[str] = Field(default_factory=list)
 
-    # published_from: date | None = None
-    # published_to: date | None = None
+    published_from: date | None = None
+    published_to: date | None = None
 
 
 class RagSearchResponse(BaseModel):
@@ -76,7 +76,7 @@ class SearchContext:
     retrieval_query: str | None = None
     filters: RetrievalFilters = field(default_factory=RetrievalFilters)
 
-    results: list[dict[str, Any]] = field(default_factory=list)
+    results: list[Any] = field(default_factory=list)
     message: str | None = None
 
     stop: bool = False

@@ -8,6 +8,7 @@ from app.schemas.parse_rag_query import (
     RagSearchResponse,
     SearchContext,
 )
+from app.schemas.public import RagResult
 from app.services.query_parser import QueryParser
 from app.services.rag_filter import RagService
 from app.utils.rag_date_conventer import quarter_to_date_range
@@ -64,7 +65,15 @@ class RagSearchPipeline:
             parsed_query=ctx.parsed_query,
             retrieval_query=ctx.retrieval_query,
             filters=ctx.filters,
-            results=ctx.results,
+            results=[
+                RagResult(
+                    video_id=hit.video_id,
+                    text=hit.text,
+                    source=hit.source,
+                    similarity=hit.similarity,
+                )
+                for hit in ctx.results
+            ],
         )
 
 
@@ -91,7 +100,7 @@ def stage_reject_unrelated(
     ctx.stop = True
 
 
-# Not in use right now
+# Not in use right now, i will work on dates later on
 def stage_build_filters(
     ctx: SearchContext,
     services: SearchServices,

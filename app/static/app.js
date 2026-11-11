@@ -139,8 +139,14 @@ async function handleRagSearch(e) {
             throw new Error(err.detail || 'Search failed');
         }
 
-        const results = await res.json();
-        statusSpan.textContent = `Found ${results.length} results`;
+        const data = await res.json();
+        const results = data.results;
+
+        if (data.message) {
+            statusSpan.textContent = data.message;
+        } else {
+            statusSpan.textContent = `Found ${results.length} results`;
+        }
         renderRagResults(results);
 
     } catch (err) {
@@ -159,7 +165,6 @@ function renderRagResults(results) {
         resultsDiv.innerHTML = '<div class="empty">No relevant results found.</div>';
         return;
     }
-
     resultsDiv.innerHTML = results.map((r, i) => `
         <div class="rag-card">
             <div class="rag-card-header">

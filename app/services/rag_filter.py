@@ -49,7 +49,6 @@ class RagService:
         min_similarity: float = MIN_SIMILARITY,
         chunk_filters=None,
         stock_filters=None,
-        # company_names=None,
     ) -> list[SearchHit]:
         qv = self.embedder.embed_text_sync(query)
 

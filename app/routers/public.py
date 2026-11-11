@@ -11,12 +11,10 @@ from app.schemas.parse_rag_query import RagSearchResponse
 from app.schemas.public import (
     Page,
     RagQuery,
-    RagResult,
     VideoPublicDetail,
     VideoPublicItem,
     VideoSearchParams,
 )
-from app.services.rag_filter import RagService
 from app.services.videos import VideoService
 from app.storage.database import get_session, get_session_read_only
 from app.storage.models import Summary, Video
