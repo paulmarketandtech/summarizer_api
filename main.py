@@ -26,11 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-IS_DEV = os.getenv("ENV", "prod").lower() in {"dev", "development", "local"}
-if IS_DEV:
-    import fastapi_swagger_dark as fsd
-
-    fsd.install(router)
+IS_DEV = os.getenv("APP_MODE", "prod").lower() in {"dev", "development", "local"}
 
 app = FastAPI(
     title="YT Summarizer API",
@@ -38,6 +34,11 @@ app = FastAPI(
     redoc_url="/redoc" if IS_DEV else None,
     openapi_url="/openapi.json" if IS_DEV else None,
 )
+
+if IS_DEV:
+    import fastapi_swagger_dark as fsd
+
+    fsd.install(router)
 
 BASE_DIR = Path(__file__).resolve().parent
 
